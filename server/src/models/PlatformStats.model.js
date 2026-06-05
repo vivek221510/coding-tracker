@@ -14,6 +14,21 @@ const platformStatsSchema = new Schema(
       default: 0,
     },
 
+    leetcodeEasySolved: {
+      type:Number,
+      default:0
+    },
+
+    leetcodeMediumSolved: {
+      type:Number,
+      default:0
+    },
+
+    leetcodeHardSolved: {
+      type:Number,
+      default:0
+    },
+
     leetcodeContestRating: {
       type: Number,
       default: 0,
