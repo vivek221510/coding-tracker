@@ -1,5 +1,6 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import ApiError from "../utils/ApiError.js";
 import { PlatformProfile } from "../models/PlatformProfile.model.js";
 
 
@@ -11,6 +12,18 @@ const linkProfile = asyncHandler(async(req,res)=> {
         codeforcesHandle,
         codechefHandle
     } = req.body
+
+    if (
+    !leetcodeUsername?.trim() &&
+    !codeforcesHandle?.trim() &&
+    !codechefHandle?.trim()
+    ) {
+        throw new ApiError(
+            400,
+            "At least one profile is required"
+        );
+    }
+
 
     const profile = await PlatformProfile.findOneAndUpdate(
         {
