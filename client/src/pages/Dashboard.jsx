@@ -1,14 +1,22 @@
 import React, { useEffect,useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 function Dashboard() {
+
+  const navigate= useNavigate();
   
   const [stats,setStats] = useState(null);
 
-  const logout = () => {
-    localStorage.removeItem("accessToken");
+  const logout = async () => {
+    try {
+      await api.post("/users/logout");
 
-    navigate("/");
+      navigate("/");
+    } catch (error) {
+      console.log(error.response?.data);
+    }
+    
   };
 
   const syncCodeforces = async () => {
