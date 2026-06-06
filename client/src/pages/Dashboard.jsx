@@ -11,6 +11,26 @@ function Dashboard() {
     navigate("/");
   };
 
+  const syncCodeforces = async () => {
+    try {
+      await api.post("/stats/sync/codeforces");
+
+      const response = await api.get("/stats/me");
+
+      setStats(response.data.data);
+    } catch (error) {
+      console.log(error.response?.data);
+    }
+  };
+
+  const syncLeetcode = async () => {
+    await api.post("/stats/sync/leetcode");
+
+    const response = await api.get("/stats/me");
+
+    setStats(response.data.data);
+  };
+
   useEffect(()=>{
     const getStats = async () => {
 
@@ -53,8 +73,10 @@ function Dashboard() {
       <p>Max Rating:{stats.codeforcesMaxRating}</p>
       <p>Contests:{stats.codeforcesTotalContests}</p>
 
-      <button onClick={logout}>Logout</button>
+      <button onClick={syncCodeforces}>Sync Codeforces</button>
+      <button onClick={syncLeetcode}>Sync LeetCode</button>
 
+      <button onClick={logout}>Logout</button>
     </div>
   );
 }
