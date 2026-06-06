@@ -1,5 +1,6 @@
 import React,{useState} from 'react'
 import api from '../api/axios'
+import Navbar from "../components/Navbar";
 
 function ProfileLink() {
 
@@ -28,6 +29,8 @@ function ProfileLink() {
   }
 
   return (
+    <>
+    <Navbar/>
     <form onSubmit={handleSubmit}>
       <input 
         type="text"
@@ -54,6 +57,8 @@ function ProfileLink() {
         Save Profiles
       </button>
     </form>
+    
+    </>
   )
 }
 
