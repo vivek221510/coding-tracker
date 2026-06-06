@@ -66,7 +66,7 @@ const syncCodeforcesStats= asyncHandler( async(req,res)=> {
         },
         {
             upsert:true,
-            new:true
+            returnDocument: "after"
         }
     )
     
@@ -201,7 +201,7 @@ const syncLeetcodeStats = asyncHandler(async (req, res) => {
     },
     {
       upsert: true,
-      new: true,
+      returnDocument: 'after'
     },
   );
 
@@ -229,9 +229,9 @@ const syncCodechefStats = asyncHandler( async(req,res) => {
   const data= response.data
   
 
-  const stats= await PlatformStats.findOneAndUpdate(
+  const stats = await PlatformStats.findOneAndUpdate(
     {
-      user:req.user._id
+      user: req.user._id,
     },
     {
       user: req.user._id,
@@ -240,13 +240,13 @@ const syncCodechefStats = asyncHandler( async(req,res) => {
 
       codechefSolved: data.problemsSolved || 0,
       codechefTotalContests: data.participation || 0,
-      lastSyncedAt: new Date()
+      lastSyncedAt: new Date(),
     },
     {
-      upsert:true,
-      returnDocument:true
-    }
-  )
+      upsert: true,
+      returnDocument: "after",
+    },
+  );
 
   return res
     .status(200)
