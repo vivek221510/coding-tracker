@@ -50,7 +50,9 @@ function Login() {
               type="email"
               name="email"
               value={email}
-              onChange={(e)=>{setEmail(e.target.value)}}
+              onChange={(e) => {
+                setEmail(e.target.value);
+              }}
               className="
               w-full
               bg-zinc-950
@@ -72,7 +74,9 @@ function Login() {
               type="password"
               name="password"
               value={password}
-              onChange={(e) => {setPassword(e.target.value)}}
+              onChange={(e) => {
+                setPassword(e.target.value);
+              }}
               className="
                 w-full
                 bg-zinc-950
@@ -86,11 +90,11 @@ function Login() {
                 text-white
                 "
             />
-            
           </div>
 
           {errorMessage && (
-            <div className="
+            <div
+              className="
               bg-red-500/10
               border
               border-red-500
@@ -98,10 +102,12 @@ function Login() {
               p-3
               rounded-xl
               mb-4
-            ">
-            {errorMessage}
+            "
+            >
+              {errorMessage}
             </div>
-            )}
+          )}
+
           <button
             type="submit"
             className="
@@ -116,6 +122,13 @@ function Login() {
           >
             Login
           </button>
+
+          <p className="text-zinc-400 text-center mt-6">
+            Do not have account?
+            <a href="/register" className="text-violet-500 ml-2 hover:underline">
+              Register
+            </a>
+          </p>
         </form>
       </div>
     </div>
