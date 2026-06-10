@@ -6,6 +6,8 @@ import Dashboard from "../pages/Dashboard"
 import ProfileLink from "../pages/ProfileLink"
 import ProtectedRoute from "../components/ProtectedRoutes"
 import Squad from "../pages/Squad"
+import SquadDetails from "../pages/SquadDetails"
+import SquadLeaderboard from "../pages/SquadLeaderboard"
 
 export default function AppRoutes() {
     return (
@@ -33,6 +35,22 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute>
               <Squad/>
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/squads/:squadId"
+          element={
+            <ProtectedRoute>
+              <SquadDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/squads/:squadId/leaderboard"
+          element={
+            <ProtectedRoute>
+              <SquadLeaderboard />
             </ProtectedRoute>
           }
         />

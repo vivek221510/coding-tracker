@@ -4,6 +4,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 
 import { Squad } from "../models/Squad.model.js";
 import { SquadRequest } from "../models/SquadRequest.model.js";
+import {PlatformStats} from "../models/PlatformStats.model.js"
 
 const createSquad = asyncHandler( async(req,res) => {
     const {name,isPrivate} =req.body;
@@ -576,6 +577,64 @@ const demoteAdmin = asyncHandler( async(req,res)=> {
 
 })
 
+const getSquadLeaderboard = asyncHandler(
+    async(req,res)=>{
+        const {squadId} =req.params
+
+        const squad=await Squad.findById(squadId)
+            .populate("members.user","username");
+
+        if(!squad) {
+            throw new ApiError(
+                404,
+                "Squad not found"
+            )
+        }
+
+        const  memberIds = squad.members.map(
+            member => member.user._id
+        )
+
+        const stats = await PlatformStats.find({
+            user:{
+                $in: memberIds
+            }
+        }).populate(
+            "user",
+            "username"
+        );
+
+        const leaderboard = stats.map(
+            stat=>({
+                userId: stat.user._id,
+                username:stat.user.username,
+
+                codeforcesRating: 
+                    stat.codeforcesRating || 0,
+
+                leetcodeRating:
+                    stat.leetcodeContestRating || 0,
+                
+                totalSolved:
+                    (stat.leetcodeSolved || 0) +
+                    (stat.codeforcesSolved || 0)
+            })
+        )
+        .sort(
+            (a,b) => b.totalSolved-a.totalSolved
+        )
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                leaderboard,
+                "Leaderboard fetched successfully"
+            )
+        )
+
+    }
+)
+
 export {
     createSquad,
     getMySquads,
@@ -587,5 +646,6 @@ export {
     getSquadDetails,
     leaveSquad,
     promoteToAdmin,
-    demoteAdmin
+    demoteAdmin,
+    getSquadLeaderboard
 }

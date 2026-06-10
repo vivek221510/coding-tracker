@@ -30,101 +30,171 @@ function Squad() {
     <>
         <Navbar />
 
-        <div className='min-h-screen bg-zinc-950 text-zinc-100 px-8 py-10'>
+        <div className='min-h-screen bg-zinc-950 text-white'>
 
-            <div className='flex justify-between items-center mb-10'>
+            {/* Hero Section */}
+            <section className='px-8 pt-10 pb-6 border-b border-zinc-900'>
+                <p className='text-amber-400 uppercase tracking-[0.25em] text-sm'
+                >
+                    Squad HeadQuarters
+                </p>
 
-                <div>
-                    <p className='text-violet-500 text-xs tracking-[0.25em] uppercase'>Squad Management</p>
+                <h1 className='text-5xl font-bold mt-4'>
+                    Build. Compete. Dominate
+                </h1>
 
-                    <h1 className='text-4xl font-bold mt-2'>
-                        My Squads
-                    </h1>
-
-                    <p className='text-zinc-400 mt-3'>Manage your squads and compete with friends</p>
-                </div>
+                <p className='text-zinc-400 mt-4 max-w-2xl text-lg'>
+                    Create squads, invite friends, manage members, and compete together on coding platforms
+                </p>
 
                 <button 
                     className='
-                    bg-violet-700
-                    hover:bg-violet-700
-                    px-5
+                    mt-8
+                    bg-amber-500
+                    hover:bg-amber-400
+                    text-black
+                    font-semibold
+                    px-6
                     py-3
                     rounded-xl
                     transition-all
                     '
                 >
-                    Create Squad
+                    + Create Squad
                 </button>
 
-            </div>
+            </section>
+            
+            {/*Content*/}
+            
+            <div className='px-8 py-10'>
 
-            {loading?(
-                <h2>Loading...</h2>
-            ):squads.length===0?(
-                <div
-                    className='
-                    bg-zinc-900
-                    border
-                    border-zinc-800
-                    rounded-2xl
-                    p-8
-                    text-center
-                    '
-                >
-                    <h2 className='text-2xl font-semibold'>No Squads Found</h2>
+                {loading? (
+                    <div className='text-center text-zinc-400'>
+                        Loading squads..
+                    </div>
+                ): squads.length===0?(
+                    <div 
+                        className='
+                            bg-zinc-900
+                            border
+                            border-zinc-800
+                            rounded-3xl
+                            p-12
+                            text-center
+                        '
+                    >
+                        <h2 className='text-3xl font-bold'>
+                            No Squads yet
+                        </h2>
 
-                    <p className='text-zinc-400 mt-3'>
-                        Create your first squads and invite friends
-                    </p>
-                </div>
-            ):(
-                <div className='grid md:grid-cols-2 gap-6'>
-                    {
-                        squads.map((squad)=> (
-                            <div key={squad._id}
-                            className='
-                                bg-zinc-900
-                                border
-                                border-zinc-800
-                                rounded-2xl
-                                p-6
-                                hover:border-violet-500
-                                transition-all
-                            '>
-                                <h2 className='text-2xl font-semibold'>
-                                    {squad.name}
-                                </h2>
+                        <p className='text-zinc-400 mt-4'>
+                            Create your first squad and start competing with friends
+                        </p>
+                    </div>
+                ):(
+                    <>
+                        <h2 className='text-2xl font-semibold mb-6'>
+                            Your Squads
+                        </h2>
 
-                                <p className='text-zinc-400 mt-3'>
-                                    Members: {squad.members.length}
-                                </p>
+                        <div className='grid lg:grid-cols-2 gap-6'>
 
-                                <p className='text-zinc-400'>Admins:{squad.admins.length}
-                                </p>
+                            {squads.map((squad)=>(
+                                <div
+                                    key={squad._id}
+                                    className='
+                                        bg-zinc-900
+                                        border
+                                        border-zinc-800
+                                        hover:border-amber-500
+                                        rounded-3xl
+                                        p-6
+                                        transition-all
+                                    '
+                                >
+                                    <div className='flex justify-between items-start'>
 
-                                <div className='mt-6'>
-                                    <Link
-                                        to={`/squads/${squad._id}`}
-                                        className='
-                                            inline-block
-                                            bg-zinc-800
-                                            hover:bg-zinc-700 
-                                            px-4 py-2
-                                            rounded-lg 
-                                            transition-all
-                                        '
-                                    >
-                                        View Squad
+                                        <div>
+                                            <h3 className='text-2xl font-bold'>
+                                                ⚔ {squad.name}
+                                            </h3>
 
-                                    </Link>
+                                            <p className='text-zinc-500 mt-2'>Squad Arena</p>
+                                        </div>
+
+                                        <span
+                                            className='
+                                                bg-amber-500/10
+                                                text-amber-400
+                                                px-3
+                                                py-1
+                                                rounded-full
+                                                text-sm
+
+                                            '
+                                        >
+                                            Active
+                                        </span>
+
+                                    </div>
+
+                                    <div className='grid grid-cols-3 gap-4 mt-8'>
+                                        <div>
+                                            <p className='text-zinc-500 text-sm'>
+                                                Members
+                                            </p>
+
+                                            <h4 className='text-2xl font-bold mt-1'>
+                                                {squad.members.length}
+                                            </h4>
+                                        </div>
+
+                                        <div>
+                                            <p className='text-zinc-500 text-sm'>
+                                                Admins
+                                            </p>
+
+                                            <h4 className='text-2xl font-bold mt-1'>
+                                                {squad.admins.length}
+                                            </h4>
+                                        </div>
+
+                                        <div>
+                                            <p className='text-zinc-500 text-sm'>
+                                                Privacy
+                                            </p>
+
+                                            <h4 className='text-lg font-semibold mt-2'>
+                                                {squad.isPrivate? "Private":"Public"}
+                                            </h4>
+                                        </div>
+
+                                    </div>
+
+                                    <div className='mt-8'>
+                                        <Link
+                                            to={`/squads/${squad._id}`}
+                                            className='
+                                                inline-flex
+                                                items-center
+                                                gap-2
+                                                text-amber-400
+                                                hover:text-amber-300
+                                                font-medium
+                                            '
+                                        >
+                                            Enter Squad →
+                                        </Link>
+                                    </div>
                                 </div>
-                            </div>
-                        ))
-                    }
-                </div>
-            )}
+                            ))}
 
+                        </div>
+                    </>
+                )}
+
+            </div>
         </div>
     </>
   )

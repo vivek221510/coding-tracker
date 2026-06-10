@@ -2,7 +2,7 @@ import {Router} from "express"
 
 import {verifyJWT} from "../middlewares/auth.middleware.js"
 
-import { acceptRequest, createSquad, demoteAdmin, getMySquads, getPendingRequests, getSquadDetails, leaveSquad, promoteToAdmin, rejectRequest, removeMember, requestToJoinSquad } from "../controllers/squad.controller.js"
+import { acceptRequest, createSquad, demoteAdmin, getMySquads, getPendingRequests, getSquadDetails, getSquadLeaderboard, leaveSquad, promoteToAdmin, rejectRequest, removeMember, requestToJoinSquad } from "../controllers/squad.controller.js"
 
 const router = Router()
 
@@ -70,6 +70,12 @@ router.patch(
     "/:squadId/demote/:memberId",
     verifyJWT,
     demoteAdmin
+)
+
+router.get(
+    "/:squadId/leaderboard",
+    verifyJWT,
+    getSquadLeaderboard
 )
 
 
