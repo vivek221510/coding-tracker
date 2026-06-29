@@ -57,9 +57,9 @@ const getMySquads = asyncHandler(async (req, res) => {
 });
 
 const requestToJoinSquad = asyncHandler(async (req, res) => {
-  const { squadId } = req.body;
+  const { joinCode } = req.body;
 
-  const squad = await Squad.findById(squadId);
+  const squad = await Squad.findOne({ joinCode });
 
   if (!squad) {
     throw new ApiError(404, "Squad not found");
@@ -70,11 +70,26 @@ const requestToJoinSquad = asyncHandler(async (req, res) => {
   );
 
   if (alreadyMember) {
-    throw new ApiError(404, "Already a squad member");
+    throw new ApiError(400, "Already a squad member");
   }
 
+  // Public Squad -> Join immediately
+  if (!squad.isPrivate) {
+    squad.members.push({
+      user: req.user._id,
+      joinedAt: new Date(),
+    });
+
+    await squad.save();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, squad, "Joined squad successfully"));
+  }
+
+  // Private Squad -> Create join request
   const existingRequest = await SquadRequest.findOne({
-    squad: squadId,
+    squad: squad._id,
     user: req.user._id,
     status: "pending",
   });
@@ -84,13 +99,13 @@ const requestToJoinSquad = asyncHandler(async (req, res) => {
   }
 
   const request = await SquadRequest.create({
-    squad: squadId,
+    squad: squad._id,
     user: req.user._id,
   });
 
   return res
     .status(201)
-    .json(new ApiResponse(201, request, "Request sent successfully"));
+    .json(new ApiResponse(201, request, "Join request sent successfully"));
 });
 
 const getPendingRequests = asyncHandler(async (req, res) => {
@@ -426,7 +441,11 @@ const getSquadLeaderboard = asyncHandler(async (req, res) => {
 
       totalSolved: (stat.leetcodeSolved || 0) + (stat.codeforcesSolved || 0),
     }))
-    .sort((a, b) => b.totalSolved - a.totalSolved);
+    .sort((a, b) => {
+      if (b.totalSolved != a.totalSolved) return b.totalSolved - a.totalSolved;
+
+      return b.codeforcesRating - a.codeforcesRating;
+    });
 
   return res
     .status(200)
