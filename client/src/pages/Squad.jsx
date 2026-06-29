@@ -41,21 +41,41 @@ function Squad() {
             on coding platforms
           </p>
 
-          <button
-            className="
-                    mt-8
-                    bg-amber-500
-                    hover:bg-amber-400
-                    text-black
-                    font-semibold
-                    px-6
-                    py-3
-                    rounded-xl
-                    transition-all
-                    "
-          >
-            + Create Squad
-          </button>
+          <Link to="/squads/create">
+            <button
+              className="
+                mt-8
+                bg-amber-500
+                hover:bg-amber-400
+                text-black
+                font-semibold
+                px-6
+                py-3
+                rounded-xl
+                transition-all
+              "
+            >
+              + Create Squad
+            </button>
+          </Link>
+          <Link to="/squads/join" className="p-4">
+            <button
+              className="
+                mt-8
+                bg-amber-500
+                hover:bg-amber-400
+                text-black
+                font-semibold
+                px-6
+                py-3
+                rounded-xl
+                transition-all
+                p-3
+              "
+            >
+              ~Join Squad
+            </button>
+          </Link>
         </section>
 
         {/*Content*/}
