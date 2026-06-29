@@ -1,23 +1,22 @@
-import React, { useState } from 'react'
+import React, { useState } from "react";
 import api from "../api/axios";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 function Login() {
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
-
-  const [email,setEmail] = useState("");
-  const [password,setPassword] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = async(e) => {
-    e.preventDefault()
+  const handleSubmit = async e => {
+    e.preventDefault();
 
     try {
-      const response = await api.post("/users/login",{
+      const response = await api.post("/users/login", {
         email,
-        password
-      })
+        password,
+      });
 
       console.log(response.data);
 
@@ -25,13 +24,7 @@ function Login() {
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Something went wrong");
     }
-
-    
-
-    
-  }
-
-  
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-6">
@@ -50,7 +43,7 @@ function Login() {
               type="email"
               name="email"
               value={email}
-              onChange={(e) => {
+              onChange={e => {
                 setEmail(e.target.value);
               }}
               className="
@@ -60,6 +53,7 @@ function Login() {
               border-zinc-800
               rounded-xl
               px-4
+              text-white
               py-3
               focus:outline-none
               focus:border-violet-500
@@ -74,7 +68,7 @@ function Login() {
               type="password"
               name="password"
               value={password}
-              onChange={(e) => {
+              onChange={e => {
                 setPassword(e.target.value);
               }}
               className="
@@ -125,7 +119,10 @@ function Login() {
 
           <p className="text-zinc-400 text-center mt-6">
             Do not have account?
-            <a href="/register" className="text-violet-500 ml-2 hover:underline">
+            <a
+              href="/register"
+              className="text-violet-500 ml-2 hover:underline"
+            >
               Register
             </a>
           </p>
@@ -135,4 +132,4 @@ function Login() {
   );
 }
 
-export default Login
+export default Login;

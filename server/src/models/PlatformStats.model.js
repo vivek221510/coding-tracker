@@ -1,4 +1,4 @@
-import mongoose,{Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const platformStatsSchema = new Schema(
   {
@@ -15,18 +15,18 @@ const platformStatsSchema = new Schema(
     },
 
     leetcodeEasySolved: {
-      type:Number,
-      default:0
+      type: Number,
+      default: 0,
     },
 
     leetcodeMediumSolved: {
-      type:Number,
-      default:0
+      type: Number,
+      default: 0,
     },
 
     leetcodeHardSolved: {
-      type:Number,
-      default:0
+      type: Number,
+      default: 0,
     },
 
     leetcodeContestRating: {
@@ -86,15 +86,15 @@ const platformStatsSchema = new Schema(
 
     lastSyncedAt: {
       type: Date,
-      default: Date.now
+      default: Date.now,
     },
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 export const PlatformStats = mongoose.model(
-    "PlatformStats",
-    platformStatsSchema
-)
+  "PlatformStats",
+  platformStatsSchema
+);

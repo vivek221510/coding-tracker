@@ -1,651 +1,451 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import ApiError from "../utils/ApiError.js"
+import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
 import { Squad } from "../models/Squad.model.js";
 import { SquadRequest } from "../models/SquadRequest.model.js";
-import {PlatformStats} from "../models/PlatformStats.model.js"
+import { PlatformStats } from "../models/PlatformStats.model.js";
 
-const createSquad = asyncHandler( async(req,res) => {
-    const {name,isPrivate} =req.body;
+const createSquad = asyncHandler(async (req, res) => {
+  const { name, isPrivate } = req.body;
 
-    if(!name?.trim()) {
-        throw new ApiError(
-            400,
-            "Squad name is required"
-        )
-    }
+  if (!name?.trim()) {
+    throw new ApiError(400, "Squad name is required");
+  }
 
-    const existedSquad = await Squad.findOne({
-        name,
-    });
+  const existedSquad = await Squad.findOne({
+    name,
+  });
 
-    if(existedSquad) {
-        throw new ApiError(
-            409,
-            "Squad already exists",
-        )
-    }
+  if (existedSquad) {
+    throw new ApiError(409, "Squad already exists");
+  }
 
-    const joinCode = Math.random()
-        .toString(36)
-        .substring(2,8)
-        .toUpperCase();
+  const joinCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    const squad = await Squad.create({
-        name,
+  const squad = await Squad.create({
+    name,
 
-        createdBy:req.user._id,
-        admins: [req.user._id],
-        members: [
-            {
-                user:req.user._id,
-            }
-        ],
+    createdBy: req.user._id,
+    admins: [req.user._id],
+    members: [
+      {
+        user: req.user._id,
+      },
+    ],
 
-        joinCode,
+    joinCode,
 
-        isPrivate:
-            isPrivate === undefined? true :isPrivate,
-    });
+    isPrivate: isPrivate === undefined ? true : isPrivate,
+  });
 
-    return res.status(201).json(
-        new ApiResponse(
-            201,
-            squad,
-            "Squad created successfully"
-        )
-    )
+  return res
+    .status(201)
+    .json(new ApiResponse(201, squad, "Squad created successfully"));
 });
 
-const getMySquads = asyncHandler( async(req,res) => {
-    
-    const squads = await Squad.find({
-        "members.user":req.user._id,
-    }).populate("createdBy","username")
-    .populate("admins","username")
+const getMySquads = asyncHandler(async (req, res) => {
+  const squads = await Squad.find({
+    "members.user": req.user._id,
+  })
+    .populate("createdBy", "username")
+    .populate("admins", "username");
 
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            squads,
-            "Squads fetched successfully"
-        )
-    )
-} )
+  return res
+    .status(200)
+    .json(new ApiResponse(200, squads, "Squads fetched successfully"));
+});
 
-const requestToJoinSquad = asyncHandler(
-    async(req,res) => {
+const requestToJoinSquad = asyncHandler(async (req, res) => {
+  const { squadId } = req.body;
 
-        const {squadId} =req.body;
+  const squad = await Squad.findById(squadId);
 
-        const squad = await Squad.findById(
-            squadId
-        );
+  if (!squad) {
+    throw new ApiError(404, "Squad not found");
+  }
 
-        if(!squad) {
-            throw new ApiError(
-                404,
-                "Squad not found"
-            )
-        }
+  const alreadyMember = squad.members.some(
+    member => member.user.toString() === req.user._id.toString()
+  );
 
-        const alreadyMember = squad.members.some(
-            member => member.user.toString() === req.user._id.toString()
-        );
+  if (alreadyMember) {
+    throw new ApiError(404, "Already a squad member");
+  }
 
-        if(alreadyMember) {
-            throw new ApiError(404,"Already a squad member")
-        }
+  const existingRequest = await SquadRequest.findOne({
+    squad: squadId,
+    user: req.user._id,
+    status: "pending",
+  });
 
-        const existingRequest = await SquadRequest.findOne({
-            squad:squadId,
-            user:req.user._id,
-            status:"pending",
-        })
+  if (existingRequest) {
+    throw new ApiError(400, "Request already pending");
+  }
 
-        if(existingRequest) {
-            throw new ApiError(
-                400,
-                "Request already pending"
-            )
-        }
+  const request = await SquadRequest.create({
+    squad: squadId,
+    user: req.user._id,
+  });
 
-        const request = await SquadRequest.create({
-            squad:squadId,
-            user:req.user._id,
-        })
+  return res
+    .status(201)
+    .json(new ApiResponse(201, request, "Request sent successfully"));
+});
 
-        return res.status(201).json(
-            new ApiResponse(
-                201,
-                request,
-                "Request sent successfully"
-            )
-        )
+const getPendingRequests = asyncHandler(async (req, res) => {
+  const squad = await Squad.findById(req.params.squadId);
 
-    }
-)
+  if (!squad) {
+    throw new ApiError(404, "Squad not found");
+  }
 
-const getPendingRequests = asyncHandler( async(req,res) => {
+  const isAdmin =
+    squad.createdBy.toString() === req.user._id.toString() ||
+    squad.admins.some(admin => admin.toString() === req.user._id.toString());
 
-    const squad = await Squad.findById(
-        req.params.squadId
+  if (!isAdmin) {
+    throw new ApiError(403, "Not Authorized");
+  }
+
+  const requests = await SquadRequest.find({
+    squad: squad._id,
+    status: "pending",
+  }).populate("user", "username email");
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, requests, "Pending requests fetched successfully")
     );
+});
 
-    if(!squad) {
-        throw new ApiError(
-            404,
-            "Squad not found"
-        )
-    }
+const acceptRequest = asyncHandler(async (req, res) => {
+  const { requestId } = req.params;
 
-    const isAdmin = squad.createdBy.toString() === req.user._id.toString() || squad.admins.some(
-        admin=> admin.toString() === req.user._id.toString()
-    )
+  const request = await SquadRequest.findById(requestId);
 
-    if(!isAdmin) {
-        throw new ApiError(
-            403,
-            "Not Authorized"
-        )
-    }
+  if (!request) {
+    throw new ApiError(404, "Request not Found");
+  }
 
-    const requests = await SquadRequest.find({
-        squad:squad._id,
-        status:"pending"
-    })
-    .populate(
-        "user",
-        "username email"
-    )
+  const squad = await Squad.findById(request.squad);
 
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            requests,
-            "Pending requests fetched successfully"
-        )
-    )
+  if (!squad) {
+    throw new ApiError(404, "Squad not found");
+  }
 
-})
+  const isAdmin =
+    squad.createdBy.toString() === req.user._id.toString() ||
+    squad.admins.some(admin => admin.toString() === req.user._id.toString());
 
-const acceptRequest = asyncHandler(async(req,res)=>{
-    const {requestId}=req.params
+  if (!isAdmin) {
+    throw new ApiError(403, "Not authorized");
+  }
 
-    const request= await SquadRequest.findById(requestId)
+  const alreadyMember = squad.members.some(
+    member => member.user.toString() === request.user.toString()
+  );
 
-    if(!request) {
-        throw new ApiError(404,"Request not Found");
-    }
+  if (alreadyMember) {
+    throw new ApiError(400, "User already a member");
+  }
 
-    const squad = await Squad.findById(request.squad);
+  squad.members.push({
+    user: request.user,
+  });
 
-    if(!squad) {
-        throw new ApiError(404,"Squad not found")
-    }
+  await squad.save();
 
-    const isAdmin = squad.createdBy.toString() === req.user._id.toString() || squad.admins.some(
-        admin => admin.toString() === req.user._id.toString()
-    )
+  request.status = "accepted";
 
-    if(!isAdmin) {
-        throw new ApiError(
-            403,
-            "Not authorized"
-        )
-    }
+  await request.save();
 
-    const alreadyMember = squad.members.some(
-        member => member.user.toString() === request.user.toString()
-    )
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Request accepted successfully"));
+});
 
-    if(alreadyMember) {
-        throw new ApiError(400,
-            "User already a member"
-        )
-    }
+const rejectRequest = asyncHandler(async (req, res) => {
+  const { requestId } = req.params;
 
-    squad.members.push({
-        user:request.user,
-    })
+  const request = await SquadRequest.findById(requestId);
 
-    await squad.save();
+  if (!request) {
+    throw new ApiError(404, "Request not found!");
+  }
 
-    request.status="accepted"
+  const squad = await Squad.findById(request.squad);
 
-    await request.save();
+  if (!squad) {
+    throw new ApiError(404, "Squad not found!");
+  }
 
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            {},
-            "Request accepted successfully"
-        )
-    )
+  const isAdmin =
+    squad.createdBy.toString() === req.user._id ||
+    squad.admins.some(admin => admin.toString() === req.user._id.toString());
 
-})
+  if (!isAdmin) {
+    throw new ApiError(403, "Not authorized");
+  }
 
-const rejectRequest = asyncHandler(async(req,res)=> {
-    const {requestId}=req.params
+  request.status = "rejected";
 
-    const request = await SquadRequest.findById(
-        requestId
-    )
+  await request.save();
 
-    if(!request) {
-        throw new ApiError(404,"Request not found!")
-    }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Request rejected successfully"));
+});
 
-    const squad = await Squad.findById(
-        request.squad
-    )
+const getSquadDetails = asyncHandler(async (req, res) => {
+  const { squadId } = req.params;
 
-    if(!squad) {
-        throw new ApiError(404, "Squad not found!");
-    }
+  const squad = await Squad.findById(squadId)
+    .populate("createdBy", "username")
+    .populate("admins", "username")
+    .populate("members.user", "username");
 
-    const isAdmin = squad.createdBy.toString() === req.user._id || squad.admins.some(
-        admin => admin.toString() === req.user._id.toString()
-    )
+  if (!squad) {
+    throw new ApiError(404, "Squad not found");
+  }
 
-    if(!isAdmin) {
-        throw new ApiError(
-            403,
-            "Not authorized"
-        )
-    }
+  const isMember = squad.members.some(
+    member => member.user._id.toString() === req.user._id.toString()
+  );
 
-    request.status="rejected"
+  if (!isMember) {
+    throw new ApiError(403, "You are not a member of this squad");
+  }
 
-    await request.save();
+  return res
+    .status(200)
+    .json(new ApiResponse(200, squad, "Squad details fetched successfully"));
+});
 
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            {},
-            "Request rejected successfully"
-        )
+const removeMember = asyncHandler(async (req, res) => {
+  const { squadId, memberId } = req.params;
+
+  const targetId = memberId.toString();
+
+  const squad = await Squad.findById(squadId);
+
+  if (!squad) {
+    throw new ApiError(404, "Squad not found");
+  }
+
+  const isCreator = squad.createdBy.toString() === req.user._id.toString();
+
+  const isAdmin = squad.admins.some(
+    admin => admin.toString() === req.user._id.toString()
+  );
+
+  if (!isCreator && !isAdmin) {
+    throw new ApiError(403, "Not authorized");
+  }
+
+  const targetMember = squad.members.find(
+    member => member.user.toString() === targetId
+  );
+
+  if (!targetMember) {
+    throw new ApiError(404, "Member not found in squad");
+  }
+
+  if (squad.createdBy.toString() === memberId) {
+    throw new ApiError(400, "creator cannot be removed");
+  }
+
+  const targetIsAdmin = squad.admins.some(
+    admin => admin.toString() === memberId
+  );
+
+  if (targetIsAdmin && !isCreator) {
+    throw new ApiError(403, "Only creator can remove admins");
+  }
+
+  if (targetId === req.user._id.toString()) {
+    throw new ApiError(400, "Use leave squad instead");
+  }
+
+  squad.admins = squad.admins.filter(admin => admin.toString() !== targetId);
+
+  squad.members = squad.members.filter(
+    member => member.user.toString() !== memberId
+  );
+
+  await squad.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Member removed successfully"));
+});
+
+const leaveSquad = asyncHandler(async (req, res) => {
+  const { squadId } = req.params;
+
+  const squad = await Squad.findById(squadId);
+
+  if (!squadId) {
+    throw new ApiError(404, "Squad not found");
+  }
+
+  const userId = req.user._id.toString();
+
+  if (squad.createdBy.toString() === userId) {
+    throw new ApiError(400, "Creator cannot leave squad");
+  }
+
+  const isMember = squad.members.some(
+    member => member.user.toString() === userId
+  );
+
+  if (!isMember) {
+    throw new ApiError(400, "You are not a member of this squad");
+  }
+
+  squad.members = squad.members.filter(
+    member => member.user.toString() !== userId
+  );
+
+  squad.admins = squad.admins.filter(admin => admin.user.toString() !== userId);
+
+  await squad.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Left squad successfully"));
+});
+
+const promoteToAdmin = asyncHandler(async (req, res) => {
+  const { squadId, memberId } = req.params;
+
+  const squad = await Squad.findById(squadId);
+
+  if (!squad) {
+    throw new ApiError(404, "Squad not found");
+  }
+
+  if (squad.createdBy.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "Only creator can promote admins");
+  }
+
+  const isMember = squad.members.some(
+    member => member.user.toString() === memberId
+  );
+
+  if (!isMember) {
+    throw new ApiError(404, "Member not found");
+  }
+
+  const alreadyAdmin = squad.admins.some(
+    admin => admin.toString() === memberId
+  );
+
+  if (alreadyAdmin) {
+    throw new ApiError(400, "User is already an admin");
+  }
+
+  squad.admins.push(memberId);
+
+  await squad.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Admin promoted successfully"));
+});
+
+const demoteAdmin = asyncHandler(async (req, res) => {
+  const { squadId, memberId } = req.params;
+
+  const squad = await Squad.findById(squadId);
+
+  if (!squad) {
+    throw new ApiError(404, "Squad not found");
+  }
+
+  if (squad.createdBy.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "Only creator can demote admins");
+  }
+
+  if (squad.createdBy.toString() === adminId) {
+    throw new ApiError(400, "Creator cannot be demoted");
+  }
+
+  const isMember = squad.members.some(
+    member => member.user.toString() === memberId
+  );
+
+  if (!isMember) {
+    throw new ApiError(404, "Member not found");
+  }
+
+  const isAdmin = squad.admins.some(admin => admin.toString() === memberId);
+
+  if (!isAdmin) {
+    throw new ApiError(404, "Admin not found");
+  }
+
+  squad.admins = squad.admins.filter(admin => admin.toString() !== adminId);
+
+  await squad.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Admin promoted successfully"));
+});
+
+const getSquadLeaderboard = asyncHandler(async (req, res) => {
+  const { squadId } = req.params;
+
+  const squad = await Squad.findById(squadId).populate(
+    "members.user",
+    "username"
+  );
+
+  if (!squad) {
+    throw new ApiError(404, "Squad not found");
+  }
+
+  const memberIds = squad.members.map(member => member.user._id);
+
+  const stats = await PlatformStats.find({
+    user: {
+      $in: memberIds,
+    },
+  }).populate("user", "username");
+
+  const leaderboard = stats
+    .map(stat => ({
+      userId: stat.user._id,
+      username: stat.user.username,
+
+      codeforcesRating: stat.codeforcesRating || 0,
+
+      leetcodeRating: stat.leetcodeContestRating || 0,
+
+      totalSolved: (stat.leetcodeSolved || 0) + (stat.codeforcesSolved || 0),
+    }))
+    .sort((a, b) => b.totalSolved - a.totalSolved);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, leaderboard, "Leaderboard fetched successfully")
     );
-
-
-
-
-})
-
-const getSquadDetails = asyncHandler( async(req,res) => {
-    const {squadId} = req.params
-
-    const squad = await Squad.findById(squadId)
-        .populate("createdBy","username")
-        .populate("admins","username")
-        .populate("members.user","username");
-
-    if(!squad) {
-        throw new ApiError(
-            404,
-            "Squad not found"
-        )
-    }
-
-    const isMember = squad.members.some(
-
-        member => member.user._id.toString() === req.user._id.toString()
-
-    );
-
-    if(!isMember) {
-        throw new ApiError(
-            403,
-            "You are not a member of this squad"
-        )
-    }
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            squad,
-            "Squad details fetched successfully"
-        )
-    )
-
-})
-
-const removeMember = asyncHandler( async(req,res)=> {
-
-
-    const {squadId,memberId} =req.params
-
-    const targetId = memberId.toString();
-
-    const squad = await Squad.findById(squadId);
-
-    if(!squad) {
-        throw new ApiError(
-            404,
-            "Squad not found"
-        )
-    }
-
-    const isCreator = squad.createdBy.toString() === req.user._id.toString()
-
-    const isAdmin = squad.admins.some(
-        admin => admin.toString() === req.user._id.toString()
-    )
-
-    if(!isCreator && !isAdmin) {
-        throw new ApiError(
-            403,
-            "Not authorized"
-        )
-    }
-
-    
-    const targetMember = squad.members.find(
-        (member) => member.user.toString() === targetId,
-    );
-    
-    if (!targetMember) {
-        throw new ApiError(404, "Member not found in squad");
-    }
-    
-    if(
-        squad.createdBy.toString() === memberId
-    ) {
-        throw new ApiError(
-            400,
-            "creator cannot be removed"
-        )
-    }
-
-    const targetIsAdmin = squad.admins.some(
-        admin => admin.toString() === memberId
-    )
-
-    if(targetIsAdmin && !isCreator) {
-        throw new ApiError(
-            403,
-            "Only creator can remove admins"
-        )
-    }
-
-    if (targetId === req.user._id.toString()) {
-        throw new ApiError(
-            400,
-            "Use leave squad instead"
-        );
-    }
-
-
-    squad.admins = squad.admins.filter(
-      (admin) => admin.toString() !== targetId,
-    );
-
-    squad.members = squad.members.filter(
-        member => member.user.toString() !== memberId
-    )
-
-    await squad.save();
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            {},
-            "Member removed successfully"
-        )
-    );
-
-
-}
-)
-
-const leaveSquad = asyncHandler(
-    async(req,res)=> {
-        const {squadId} =req.params
-
-        const squad = await Squad.findById(
-            squadId
-        );
-
-        if(!squadId) {
-            throw new ApiError(
-                404,
-                "Squad not found"
-            )
-        }
-
-        const userId = req.user._id.toString()
-
-        if(squad.createdBy.toString() === userId) {
-            throw new ApiError(
-                400,
-                "Creator cannot leave squad"
-            )
-        }
-
-        const isMember = squad.members.some(
-            member => member.user.toString() === userId
-        )
-
-        if(!isMember) {
-            throw new ApiError(
-                400,
-                "You are not a member of this squad"
-            )
-        }
-
-        squad.members=squad.members.filter(
-            member => member.user.toString()!== userId
-        )
-
-        squad.admins=squad.admins.filter(
-            admin => admin.user.toString()!== userId
-        )
-
-        await squad.save()
-
-        return res.status(200).json(
-            new ApiResponse(
-                200,
-                {},
-                "Left squad successfully"
-            )
-        );
-
-    }
-)
-
-const promoteToAdmin = asyncHandler( async(req,res)=> {
-    const {squadId,memberId} = req.params
-
-    const squad = await Squad.findById(
-        squadId
-    )
-
-    if(!squad) {
-        throw new ApiError(
-            404,
-            "Squad not found"
-        )
-    }
-
-    if(squad.createdBy.toString() !== req.user._id.toString()) {
-        throw new ApiError(
-            403,
-            "Only creator can promote admins"
-        )
-    }
-
-    const isMember = squad.members.some(
-        member=> member.user.toString() === memberId
-    )
-
-    if(!isMember) {
-        throw new ApiError(
-            404,
-            "Member not found"
-        )
-    }
-
-    const alreadyAdmin = squad.admins.some(
-        admin => admin.toString() === memberId
-    )
-
-    if(alreadyAdmin) {
-        throw new ApiError(
-            400,
-            "User is already an admin"
-        )
-    }
-
-    squad.admins.push(memberId)
-
-    await squad.save();
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            {},
-            "Admin promoted successfully"
-        )
-    )
-
-})
-
-const demoteAdmin = asyncHandler( async(req,res)=> {
-    const {squadId,memberId} = req.params
-
-    const squad = await Squad.findById(
-        squadId
-    )
-
-    if(!squad) {
-        throw new ApiError(
-            404,
-            "Squad not found"
-        )
-    }
-
-    if(squad.createdBy.toString() !== req.user._id.toString()) {
-        throw new ApiError(
-            403,
-            "Only creator can demote admins"
-        )
-    }
-
-    if (squad.createdBy.toString() === adminId) {
-        throw new ApiError(
-            400,
-            "Creator cannot be demoted"
-        );
-    }
-
-    const isMember = squad.members.some(
-        member=> member.user.toString() === memberId
-    )
-
-    if(!isMember) {
-        throw new ApiError(
-            404,
-            "Member not found"
-        )
-    }
-
-    const isAdmin = squad.admins.some(
-        admin => admin.toString() === memberId
-    )
-
-    if(!isAdmin) {
-        throw new ApiError(
-            404,
-            "Admin not found"
-        )
-    }
-
-    squad.admins = squad.admins.filter((admin) => admin.toString() !== adminId);
-
-
-    await squad.save();
-
-    return res.status(200).json(
-        new ApiResponse(
-            200,
-            {},
-            "Admin promoted successfully"
-        )
-    )
-
-})
-
-const getSquadLeaderboard = asyncHandler(
-    async(req,res)=>{
-        const {squadId} =req.params
-
-        const squad=await Squad.findById(squadId)
-            .populate("members.user","username");
-
-        if(!squad) {
-            throw new ApiError(
-                404,
-                "Squad not found"
-            )
-        }
-
-        const  memberIds = squad.members.map(
-            member => member.user._id
-        )
-
-        const stats = await PlatformStats.find({
-            user:{
-                $in: memberIds
-            }
-        }).populate(
-            "user",
-            "username"
-        );
-
-        const leaderboard = stats.map(
-            stat=>({
-                userId: stat.user._id,
-                username:stat.user.username,
-
-                codeforcesRating: 
-                    stat.codeforcesRating || 0,
-
-                leetcodeRating:
-                    stat.leetcodeContestRating || 0,
-                
-                totalSolved:
-                    (stat.leetcodeSolved || 0) +
-                    (stat.codeforcesSolved || 0)
-            })
-        )
-        .sort(
-            (a,b) => b.totalSolved-a.totalSolved
-        )
-
-        return res.status(200).json(
-            new ApiResponse(
-                200,
-                leaderboard,
-                "Leaderboard fetched successfully"
-            )
-        )
-
-    }
-)
+});
 
 export {
-    createSquad,
-    getMySquads,
-    requestToJoinSquad,
-    getPendingRequests,
-    acceptRequest,
-    rejectRequest,
-    removeMember,
-    getSquadDetails,
-    leaveSquad,
-    promoteToAdmin,
-    demoteAdmin,
-    getSquadLeaderboard
-}
+  createSquad,
+  getMySquads,
+  requestToJoinSquad,
+  getPendingRequests,
+  acceptRequest,
+  rejectRequest,
+  removeMember,
+  getSquadDetails,
+  leaveSquad,
+  promoteToAdmin,
+  demoteAdmin,
+  getSquadLeaderboard,
+};

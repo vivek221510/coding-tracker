@@ -1,13 +1,12 @@
-import React, { useEffect,useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import Navbar from "../components/Navbar";
 
 function Dashboard() {
+  const navigate = useNavigate();
 
-  const navigate= useNavigate();
-  
-  const [stats,setStats] = useState(null);
+  const [stats, setStats] = useState(null);
 
   const logout = async () => {
     try {
@@ -17,27 +16,27 @@ function Dashboard() {
     } catch (error) {
       console.log(error.response?.data);
     }
-    
   };
 
   const fetchStats = async () => {
     try {
-        const response = await api.get(
-            "/stats/me"
-        );
-        setStats(response.data.data);
+      const response = await api.get("/stats/me");
+      setStats(response.data.data);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        setStats(null);
+        return;
+      }
 
-    } catch(error) {
-        console.log(error.response?.data);
+      console.log(error.response?.data);
     }
-};
+  };
 
   const syncCodeforces = async () => {
     try {
       await api.post("/stats/sync/codeforces");
 
-      await fetchStats()
-
+      await fetchStats();
     } catch (error) {
       console.log(error.response?.data);
     }
@@ -46,35 +45,52 @@ function Dashboard() {
   const syncLeetcode = async () => {
     try {
       await api.post("/stats/sync/leetcode");
-  
-      await fetchStats()
+
+      await fetchStats();
     } catch (error) {
-      console.log(error.response?.data)
+      console.log(error.response?.data);
     }
   };
 
-  useEffect(()=>{
-    fetchStats()
-  },[]);
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
- if (!stats) {
-   return (
-     <>
-       <Navbar/>
-         <div>
-           <h1 >
-            Dashboard
-          </h1>
-           <button onClick={syncCodeforces}>Sync Codeforces</button>
+  if (!stats) {
+    return (
+      <>
+        <Navbar />
 
-           <button onClick={syncLeetcode}>Sync LeetCode</button>
+        <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center px-6">
+          <div className="max-w-xl w-full bg-zinc-900 border border-zinc-800 rounded-3xl p-10 text-center">
+            <div className="text-6xl mb-6">🚀</div>
 
-           <p>No stats synced yet.</p>
-         </div>
-       
-     </>
-   );
- }
+            <h1 className="text-4xl font-bold">Welcome to CodingTracker</h1>
+
+            <p className="text-zinc-400 mt-4">
+              Connect your coding profiles to unlock your dashboard, track
+              contests and compare with your squad.
+            </p>
+
+            <button
+              onClick={() => navigate("/profile-link")}
+              className="
+              mt-8
+              bg-violet-600
+              hover:bg-violet-700
+              px-8
+              py-3
+              rounded-xl
+              font-medium
+            "
+            >
+              Link Profiles
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -218,7 +234,7 @@ function Dashboard() {
               style={{
                 width: `${Math.min(
                   ((stats.codeforcesRating || 0) / 1200) * 100,
-                  100,
+                  100
                 )}%`,
               }}
             />

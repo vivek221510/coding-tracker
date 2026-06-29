@@ -1,39 +1,55 @@
-import React,{useState} from 'react'
-import api from '../api/axios'
+import React, { useState } from "react";
+import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 function ProfileLink() {
+  const [formData, setFormData] = useState({
+    leetcodeUsername: "",
+    codeforcesHandle: "",
+    codechefHandle: "",
+  });
 
-  const [formData,setFormData]=useState({
-    leetcodeUsername:"",
-    codeforcesHandle:"",
-    codechefHandle:""
-  })
+  const navigate = useNavigate();
 
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setFormData({
       ...formData,
-      [e.target.name]:e.target.value
-    })
-  }
+      [e.target.name]: e.target.value,
+    });
+  };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    
-    try {
-      const response = await api.post("/profiles/link", formData);
 
-      setMessage("Profiles linked successfully.");
-
-      setErrorMessage("");
-
-    } catch (error) {
-      setErrorMessage(error.response?.data?.message);
+    if (
+      !formData.leetcodeUsername &&
+      !formData.codeforcesHandle &&
+      !formData.codechefHandle
+    ) {
+      setErrorMessage("Please enter at least one profile");
+      return;
     }
-  }
+
+    try {
+      await api.post("/profiles/link", formData);
+
+      if (formData.codeforcesHandle) {
+        await api.post("/stats/sync/codeforces");
+      }
+
+      if (formData.leetcodeUsername) {
+        await api.post("/stats/sync/leetcode");
+      }
+
+      navigate("/dashboard");
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Something went wrong");
+    }
+  };
 
   return (
     <>
@@ -55,7 +71,8 @@ function ProfileLink() {
           </div>
 
           {message && (
-            <div className="
+            <div
+              className="
               bg-green-500/10
               border
               border-green-500
@@ -63,13 +80,15 @@ function ProfileLink() {
               p-3
               rounded-xl
               mb-4
-            ">
+            "
+            >
               {message}
             </div>
           )}
 
           {errorMessage && (
-            <div className="
+            <div
+              className="
               bg-red-500/10
               border
               border-red-500
@@ -77,7 +96,8 @@ function ProfileLink() {
               p-3
               rounded-xl
               mb-4
-            ">
+            "
+            >
               {errorMessage}
             </div>
           )}
@@ -175,7 +195,7 @@ function ProfileLink() {
             transition-all
             "
             >
-              Save Changes
+              Save & Sync Profiles
             </button>
           </form>
         </div>
@@ -184,4 +204,4 @@ function ProfileLink() {
   );
 }
 
-export default ProfileLink
+export default ProfileLink;

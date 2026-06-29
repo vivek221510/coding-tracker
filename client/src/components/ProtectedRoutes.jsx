@@ -1,31 +1,27 @@
 import { Navigate } from "react-router-dom";
 import api from "../api/axios";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
+export default function ProtectedRoute({ children }) {
+  const [isAunthenticated, SetIsAuthenticated] = useState(null);
 
-export default function ProtectedRoute({children}) {
-    const [isAunthenticated,SetIsAuthenticated] = useState(null);
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await api.get("/users/current-user");
 
-    useEffect(()=> {
-        const checkAuth = async () => {
-            try{
-                await api.get("/users/current-user");
+        SetIsAuthenticated(true);
+      } catch {
+        SetIsAuthenticated(false);
+      }
+    };
 
-                SetIsAuthenticated(true);
-            }
-            catch {
-                SetIsAuthenticated(false)
-            }
-        }
+    checkAuth();
+  }, []);
 
-        checkAuth();
-    },[])
+  if (isAunthenticated === null) {
+    return <h1>Loading...</h1>;
+  }
 
-    if(isAunthenticated===null) {
-        return <h1>Loading...</h1>
-    }
-
-    return isAunthenticated?children: <Navigate to="/" />
-
+  return isAunthenticated ? children : <Navigate to="/" />;
 }
-

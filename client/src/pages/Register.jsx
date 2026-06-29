@@ -1,35 +1,31 @@
-import React,{useState} from 'react'
-import { useNavigate } from 'react-router-dom'
-import api from '../api/axios.js'
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api/axios.js";
 
 function Register() {
-
   const navigate = useNavigate();
 
-  const [formData,setFormData] = useState({
-    username:"",
-    email:"",
-    password:""
-  })
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setFormData({
       ...formData,
-      [e.target.name]:e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     try {
-
-      const response = await api.post("/users/register",
-        formData
-      );
+      const response = await api.post("/users/register", formData);
 
       console.log(response.data);
       setSuccessMessage("Account created successfully");
@@ -37,9 +33,8 @@ function Register() {
       setTimeout(() => {
         navigate("/");
       }, 1500);
-
     } catch (error) {
-      console.log(error.response?.data)
+      console.log(error.response?.data);
     }
   };
 
@@ -62,6 +57,7 @@ function Register() {
 
             <input
               type="text"
+              name="username"
               value={formData.username}
               onChange={handleChange}
               className="
@@ -84,6 +80,7 @@ function Register() {
 
             <input
               type="email"
+              name="email"
               value={formData.email}
               onChange={handleChange}
               className="
@@ -106,6 +103,7 @@ function Register() {
 
             <input
               type="password"
+              name="password"
               value={formData.password}
               onChange={handleChange}
               className="
@@ -182,4 +180,4 @@ function Register() {
   );
 }
 
-export default Register
+export default Register;
