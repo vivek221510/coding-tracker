@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
+import { useNavigate } from "react-router-dom";
 
 function SquadDetails() {
   const { squadId } = useParams();
@@ -10,6 +11,31 @@ function SquadDetails() {
   const [requests, setRequets] = useState([]);
   const [showRequests, setShowRequests] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const navigate = useNavigate();
+
+  const copyJoinCode = async () => {
+    try {
+      await navigator.clipboard.writeText(squad.joinCode);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const fetchLeaderboard = async () => {
+    try {
+      const response = await api.get(`/squads/${squadId}/leaderboard`);
+
+      setLeaderboard(response.data.data);
+    } catch (error) {
+      console.log(error.response?.data);
+    }
+  };
 
   const fetchRequests = async () => {
     try {
@@ -92,6 +118,7 @@ function SquadDetails() {
   useEffect(() => {
     fetchSquad();
     fetchRequests();
+    fetchLeaderboard();
   }, []);
 
   if (!squad) {
@@ -126,6 +153,45 @@ function SquadDetails() {
                 </span>
 
                 <span>Join Code: {squad.joinCode}</span>
+              </div>
+            </div>
+
+            <div
+              className="
+                mt-8
+                bg-zinc-900
+                border
+                border-zinc-800
+                rounded-2xl
+                p-6
+              "
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-zinc-400 text-sm uppercase tracking-wider">
+                    Invite Code
+                  </p>
+                  <h2 className="text-3xl font-bold tracking-[0.35em] mt-2">
+                    {squad.joinCode}
+                  </h2>
+                  <p className="text-zinc-500 mt-2">
+                    Share this code to invite members
+                  </p>
+                </div>
+                <button
+                  onClick={copyJoinCode}
+                  className="
+                  bg-blue-600
+                  hover:bg-blue-700
+                  px-5
+                  py-3
+                  rounded-xl
+                  font-medium
+                  transition-all
+                "
+                >
+                  {copied ? "Copied" : "Copy"}
+                </button>
               </div>
             </div>
 
@@ -271,20 +337,34 @@ function SquadDetails() {
             >
               <p>🏆 Top Performers</p>
               <div className="mt-5 space-y-4">
-                <div className="flex justify-between">
-                  <span>#1 Vivek</span>
+                {leaderboard.length === 0 ? (
+                  <p className="text-zinc-400">No leaderboard available.</p>
+                ) : (
+                  leaderboard.slice(0, 3).map((member, index) => (
+                    <div
+                      key={member.userId}
+                      className="flex justify-between items-center"
+                    >
+                      <div>
+                        <p className="font-medium">
+                          {index === 0 && "🥇 "}
+                          {index === 1 && "🥈 "}
+                          {index === 2 && "🥉 "}
 
-                  <span className="text-zinc-400">950</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span>#2 Rahul</span>
-                  <span className="text-zinc-400">900</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>#3 Raj</span>
-                  <span className="text-zinc-400">850</span>
-                </div>
+                          {member.username}
+                        </p>
+                        <p className="text-zinc-500 text-sm">
+                          CF {member.codeforcesRating} • LC{" "}
+                          {Math.round(member.leetcodeRating)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">{member.totalSolved}</p>
+                        <p className="text-xs text-zinc-500">Solved</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
               <button
@@ -297,6 +377,7 @@ function SquadDetails() {
                       rounded-xl
                       transition-all
                   "
+                onClick={() => navigate(`/squads/${squadId}/leaderboard`)}
               >
                 View Leaderboard
               </button>
