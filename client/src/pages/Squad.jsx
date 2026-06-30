@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import { Link } from "react-router-dom";
+import Footer from "../components/Footer";
 
 function Squad() {
   const [squads, setSquads] = useState([]);
@@ -24,10 +25,10 @@ function Squad() {
   }, []);
 
   return (
-    <>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 px-1 py-1">
       <Navbar />
 
-      <div className="min-h-screen bg-zinc-950 text-white">
+      <div className="grid-1">
         {/* Hero Section */}
         <section className="px-8 pt-10 pb-6 border-b border-zinc-900">
           <p className="text-amber-400 uppercase tracking-[0.25em] text-sm">
@@ -188,7 +189,8 @@ function Squad() {
           )}
         </div>
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }
 

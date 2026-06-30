@@ -2,6 +2,7 @@ import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import Footer from "../components/Footer";
 
 function CreateSquad() {
   const navigate = useNavigate();
@@ -57,9 +58,9 @@ function CreateSquad() {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 px-1 py-1">
       <Navbar />
-      <div className="min-h-screen bg-zinc-950 text-white">
+      <div className="flex-1">
         <section className="px-8 py-10 border-b border-zinc-900">
           <p className="text-emerald-400 uppercase tracking-[0.25em] text-sm">
             Squad Management
@@ -174,7 +175,8 @@ function CreateSquad() {
           </form>
         </div>
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }
 

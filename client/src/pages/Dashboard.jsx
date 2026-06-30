@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -93,10 +94,10 @@ function Dashboard() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 px-1 py-1">
       <Navbar />
 
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 px-8 py-10">
+      <div className="flex-1">
         {/* Header */}
 
         <div className="mb-10">
@@ -263,7 +264,8 @@ function Dashboard() {
           </button>
         </div>
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }
 

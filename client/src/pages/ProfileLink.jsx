@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 function ProfileLink() {
   const [formData, setFormData] = useState({
@@ -52,10 +53,10 @@ function ProfileLink() {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 px-1 py-1">
       <Navbar />
 
-      <div className="min-h-screen bg-zinc-950 text-zinc-100 px-8 py-10">
+      <div className="grid-1">
         <div className="max-w-2xl mx-auto">
           <div className="mb-10">
             <p className="text-violet-500 text-xs font-medium tracking-[0.25em] uppercase">
@@ -200,7 +201,8 @@ function ProfileLink() {
           </form>
         </div>
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }
 

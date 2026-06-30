@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import Footer from "../components/Footer";
+import Layout from "../components/Layout";
 
 function SquadDetails() {
   const { squadId } = useParams();
@@ -133,9 +135,9 @@ function SquadDetails() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 px-1 py-1">
       <Navbar />
-      <div className="min-h-screen bg-zinc-950 text-white">
+      <div className="grid-1">
         {/*Hero*/}
 
         <section className="px-8 py-10 border-b border-zinc-900">
@@ -663,7 +665,8 @@ function SquadDetails() {
           </div>
         )}
       </div>
-    </>
+      <Footer />
+    </div>
   );
 }
 
