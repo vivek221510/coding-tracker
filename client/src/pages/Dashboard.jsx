@@ -8,6 +8,28 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const [stats, setStats] = useState(null);
+  const [goalType, setGoalType] = useState(
+    localStorage.getItem("goalType") || "codeforces"
+  );
+
+  const [goalValue, setGoalValue] = useState(() => {
+    const type = localStorage.getItem("goalType") || "codeforces";
+
+    return Number(localStorage.getItem(`${type}Goal`)) || 0;
+  });
+
+  const handleGoalChange = e => {
+    const value = e.target.value;
+    setGoalType(value);
+    localStorage.setItem("goalType", value);
+    setGoalValue(Number(localStorage.getItem(`${value}Goal`)) || 0);
+  };
+
+  const saveGoal = () => {
+    if (goalValue <= 0) return;
+
+    localStorage.setItem(`${goalType}Goal`, goalValue);
+  };
 
   const logout = async () => {
     try {
@@ -92,6 +114,16 @@ function Dashboard() {
       </>
     );
   }
+
+  const currentValue =
+    goalType === "codeforces"
+      ? stats.codeforcesRating || 0
+      : goalType === "leetcode"
+        ? Math.round(stats.leetcodeContestRating || 0)
+        : (stats.leetcodeSolved || 0) + (stats.codeforcesSolved || 0);
+
+  const progress =
+    goalValue > 0 ? Math.min((currentValue / goalValue) * 100, 100) : 0;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 px-1 py-1">
@@ -223,29 +255,79 @@ function Dashboard() {
         {/* Goal Card */}
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-8">
-          <div className="flex justify-between mb-4">
-            <h2 className="font-semibold">Current Goal</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">🎯 Next Milestone</h2>
 
-            <span className="text-zinc-400">CF 1200</span>
+            <select
+              value={goalType}
+              onChange={handleGoalChange}
+              className="
+                bg-zinc-950
+                border
+                border-zinc-700
+                rounded-lg
+                px-3
+                py-2
+              "
+            >
+              <option value="codeforces">Codeforces Rating</option>
+
+              <option value="leetcode">LeetCode Rating</option>
+
+              <option value="problems">Problems Solved</option>
+            </select>
           </div>
 
-          <div className="w-full bg-zinc-800 h-2 rounded-full">
+          <div className="flex gap-3 mb-6">
+            <input
+              type="number"
+              value={goalValue}
+              onChange={e => setGoalValue(Number(e.target.value))}
+              placeholder="Enter Goal"
+              className="
+                flex-1
+                bg-zinc-950
+                border
+                border-zinc-700
+                rounded-lg
+                px-4
+                py-2
+              "
+            />
+
+            <button
+              onClick={saveGoal}
+              className="
+        bg-violet-600
+        hover:bg-violet-700
+        px-5
+        rounded-lg
+      "
+            >
+              Save
+            </button>
+          </div>
+
+          <div className="flex justify-between mb-3">
+            <span className="text-3xl font-bold">{currentValue}</span>
+
+            <span className="text-zinc-400">Goal: {goalValue}</span>
+          </div>
+
+          <div className="w-full bg-zinc-800 h-3 rounded-full">
             <div
-              className="bg-violet-500 h-2 rounded-full"
+              className="bg-violet-500 h-3 rounded-full transition-all"
               style={{
-                width: `${Math.min(
-                  ((stats.codeforcesRating || 0) / 1200) * 100,
-                  100
-                )}%`,
+                width: `${progress}%`,
               }}
             />
           </div>
 
-          <p className="text-zinc-400 mt-3">
-            {stats.codeforcesRating || 0} / 1200
+          <p className="text-zinc-400 mt-4">
+            {Math.max(goalValue - currentValue, 0)}{" "}
+            {goalType === "problems" ? "problems" : "rating"} remaining
           </p>
         </div>
-
         {/* Actions */}
 
         <div className="flex flex-wrap gap-4">

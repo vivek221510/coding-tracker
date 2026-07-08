@@ -3,10 +3,11 @@ import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import Footer from "../components/Footer";
+import { useNavigate } from "react-router-dom";
 
 function SquadLeaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
-
+  const navigate = useNavigate();
   const { squadId } = useParams();
 
   const fetchLeaderboard = async () => {
@@ -56,13 +57,26 @@ function SquadLeaderboard() {
           </p>
 
           <h1 className="text-5xl font-bold mt-4">🏆 Leaderboard</h1>
-          <p className="text-zinc-100 mt-4">Members: {leaderboard.length}</p>
-          <p className="text-zinc-100 mt-4">
-            Leader: {leaderboard[0].username}
-          </p>
-          <p className="text-zinc-100 mt-4">
-            Highest Solved: {leaderboard[0].totalSolved}
-          </p>
+          <div className="grid grid-cols-3 gap-4 mt-8">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+              <p className="text-zinc-400 text-sm">Members</p>
+              <h2 className="text-3xl font-bold">{leaderboard.length}</h2>
+            </div>
+
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+              <p className="text-zinc-400 text-sm">Leader</p>
+              <h2 className="text-2xl font-bold">
+                {leaderboard[0]?.username || "-"}
+              </h2>
+            </div>
+
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+              <p className="text-zinc-400 text-sm">Highest Solved</p>
+              <h2 className="text-3xl font-bold">
+                {leaderboard[0]?.totalSolved || 0}
+              </h2>
+            </div>
+          </div>
           <p className="text-zinc-400 mt-4">See who is leading the squad.</p>
         </section>
 
