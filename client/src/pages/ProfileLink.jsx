@@ -8,7 +8,6 @@ function ProfileLink() {
   const [formData, setFormData] = useState({
     leetcodeUsername: "",
     codeforcesHandle: "",
-    codechefHandle: "",
   });
 
   const navigate = useNavigate();
@@ -26,11 +25,7 @@ function ProfileLink() {
   const handleSubmit = async e => {
     e.preventDefault();
 
-    if (
-      !formData.leetcodeUsername &&
-      !formData.codeforcesHandle &&
-      !formData.codechefHandle
-    ) {
+    if (!formData.leetcodeUsername && !formData.codeforcesHandle) {
       setErrorMessage("Please enter at least one profile");
       return;
     }
@@ -143,32 +138,6 @@ function ProfileLink() {
                 placeholder="Enter Codeforces handle"
                 onChange={handleChange}
                 value={formData.codeforcesHandle}
-                className="
-              w-full
-              bg-zinc-950
-              border
-              border-zinc-800
-              rounded-xl
-              px-4
-              py-3
-              focus:outline-none
-              focus:border-violet-500
-              transition-all
-              "
-              />
-            </div>
-
-            <div className="mb-8">
-              <label className="block text-zinc-300 mb-2">
-                CodeChef Handle
-              </label>
-
-              <input
-                type="text"
-                name="codechefHandle"
-                placeholder="Enter CodeChef handle"
-                onChange={handleChange}
-                value={formData.codechefHandle}
                 className="
               w-full
               bg-zinc-950

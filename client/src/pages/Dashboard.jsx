@@ -125,6 +125,8 @@ function Dashboard() {
   const progress =
     goalValue > 0 ? Math.min((currentValue / goalValue) * 100, 100) : 0;
 
+  const hasGoal = goalValue > 0;
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 px-1 py-1">
       <Navbar />
@@ -308,25 +310,41 @@ function Dashboard() {
             </button>
           </div>
 
-          <div className="flex justify-between mb-3">
-            <span className="text-3xl font-bold">{currentValue}</span>
+          {hasGoal ? (
+            <>
+              <div className="flex justify-between mb-3">
+                <span className="text-3xl font-bold">{currentValue}</span>
 
-            <span className="text-zinc-400">Goal: {goalValue}</span>
-          </div>
+                <span className="text-zinc-400">Goal: {goalValue}</span>
+              </div>
 
-          <div className="w-full bg-zinc-800 h-3 rounded-full">
-            <div
-              className="bg-violet-500 h-3 rounded-full transition-all"
-              style={{
-                width: `${progress}%`,
-              }}
-            />
-          </div>
+              <div className="w-full bg-zinc-800 h-3 rounded-full">
+                <div
+                  className="bg-violet-500 h-3 rounded-full transition-all"
+                  style={{
+                    width: `${progress}%`,
+                  }}
+                />
+              </div>
 
-          <p className="text-zinc-400 mt-4">
-            {Math.max(goalValue - currentValue, 0)}{" "}
-            {goalType === "problems" ? "problems" : "rating"} remaining
-          </p>
+              <p className="text-zinc-400 mt-4">
+                {Math.max(goalValue - currentValue, 0)}{" "}
+                {goalType === "problems" ? "problems" : "rating"} remaining
+              </p>
+            </>
+          ) : (
+            <div className="mt-4 rounded-2xl border border-dashed border-zinc-700 p-6 text-center">
+              <div className="text-4xl mb-3">🎯</div>
+
+              <h3 className="text-xl font-semibold">No goal set yet</h3>
+
+              <p className="text-zinc-400 mt-2">
+                Enter your target above and click
+                <span className="text-violet-400 font-medium"> Save</span> to
+                start tracking your progress.
+              </p>
+            </div>
+          )}
         </div>
         {/* Actions */}
 
