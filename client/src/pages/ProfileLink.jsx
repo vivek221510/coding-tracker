@@ -48,10 +48,10 @@ function ProfileLink() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 px-1 py-1">
+    <div className="min-h-screen flex flex-col bg-zinc-950 text-zinc-100 px-1 py-1">
       <Navbar />
 
-      <div className="grid-1">
+      <main className="flex-1 flex items-start justify-center px-8 py-10">
         <div className="max-w-2xl mx-auto">
           <div className="mb-10">
             <p className="text-violet-500 text-xs font-medium tracking-[0.25em] uppercase">
@@ -156,20 +156,21 @@ function ProfileLink() {
             <button
               type="submit"
               className="
-            bg-violet-600
-            hover:bg-violet-700
-            px-6
-            py-3
-            rounded-xl
-            font-medium
-            transition-all
-            "
+              w-full
+              bg-violet-600
+              hover:bg-violet-700
+              px-6
+              py-3
+              rounded-xl
+              font-medium
+              transition-all
+              "
             >
               Save & Sync Profiles
             </button>
           </form>
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );
