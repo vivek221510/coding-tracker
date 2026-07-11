@@ -8,61 +8,68 @@ import { PlatformStats } from "../models/PlatformStats.model.js";
 import * as cheerio from "cheerio";
 
 const syncCodeforcesStats = asyncHandler(async (req, res) => {
-  const profile = await PlatformProfile.findOne({
-    user: req.user._id,
-  });
+  try {
+    const profile = await PlatformProfile.findOne({
+      user: req.user._id,
+    });
 
-  if (!profile?.codeforcesHandle) {
-    throw new ApiError(400, "Codeforces handle not linked");
-  }
+    if (!profile?.codeforcesHandle) {
+      throw new ApiError(400, "Codeforces handle not linked");
+    }
 
-  const response = await axios.get(
-    `https://codeforces.com/api/user.info?handles=${profile.codeforcesHandle}`
-  );
+    const response = await axios.get(
+      `https://codeforces.com/api/user.info?handles=${profile.codeforcesHandle}`
+    );
 
-  const userData = response.data.result[0];
+    const userData = response.data.result[0];
 
-  const submissionsResponse = await axios.get(
-    `https://codeforces.com/api/user.status?handle=${profile.codeforcesHandle}`
-  );
+    const submissionsResponse = await axios.get(
+      `https://codeforces.com/api/user.status?handle=${profile.codeforcesHandle}`
+    );
 
-  const solvedProblems = new Set();
+    const solvedProblems = new Set();
 
-  submissionsResponse.data.result.forEach(submission => {
-    if (submission.verdict === "OK") {
-      solvedProblems.add(
-        `${submission.problem.contestId}-${submission.problem.index}`
+    submissionsResponse.data.result.forEach(submission => {
+      if (submission.verdict === "OK") {
+        solvedProblems.add(
+          `${submission.problem.contestId}-${submission.problem.index}`
+        );
+      }
+    });
+
+    const ratingResponse = await axios.get(
+      `https://codeforces.com/api/user.rating?handle=${profile.codeforcesHandle}`
+    );
+
+    const totalContests = ratingResponse.data.result.length;
+
+    const stats = await PlatformStats.findOneAndUpdate(
+      {
+        user: req.user._id,
+      },
+      {
+        user: req.user._id,
+        codeforcesRating: userData.rating || 0,
+        codeforcesMaxRating: userData.maxRating || 0,
+        codeforcesSolved: solvedProblems.size || 0,
+        codeforcesTotalContests: totalContests,
+        lastSyncedAt: new Date(),
+      },
+      {
+        upsert: true,
+        returnDocument: "after",
+      }
+    );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, stats, "Codeforces stats synced successfully")
       );
-    }
-  });
-
-  const ratingResponse = await axios.get(
-    `https://codeforces.com/api/user.rating?handle=${profile.codeforcesHandle}`
-  );
-
-  const totalContests = ratingResponse.data.result.length;
-
-  const stats = await PlatformStats.findOneAndUpdate(
-    {
-      user: req.user._id,
-    },
-    {
-      user: req.user._id,
-      codeforcesRating: userData.rating || 0,
-      codeforcesMaxRating: userData.maxRating || 0,
-      codeforcesSolved: solvedProblems.size || 0,
-      codeforcesTotalContests: totalContests,
-      lastSyncedAt: new Date(),
-    },
-    {
-      upsert: true,
-      returnDocument: "after",
-    }
-  );
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, stats, "Codeforces stats synced successfully"));
+  } catch (error) {
+    console.error(error.response?.data || error);
+    throw error;
+  }
 });
 
 const syncLeetcodeStats = asyncHandler(async (req, res) => {
