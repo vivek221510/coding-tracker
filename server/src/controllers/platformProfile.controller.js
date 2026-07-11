@@ -25,7 +25,7 @@ const linkProfile = asyncHandler(async (req, res) => {
       codechefHandle,
     },
     {
-      new: true,
+      returnDocument: true,
       upsert: true,
     }
   );
