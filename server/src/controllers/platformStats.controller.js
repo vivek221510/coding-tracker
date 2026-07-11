@@ -21,6 +21,10 @@ const syncCodeforcesStats = asyncHandler(async (req, res) => {
       `https://codeforces.com/api/user.info?handles=${profile.codeforcesHandle}`
     );
 
+    if (response.data.status !== "OK") {
+      throw new ApiError(400, "Invalid Codeforces handle");
+    }
+
     const userData = response.data.result[0];
 
     const submissionsResponse = await axios.get(
@@ -107,6 +111,10 @@ const syncLeetcodeStats = asyncHandler(async (req, res) => {
       },
     }
   );
+
+  if (!solvedResponse.data.data.matchedUser) {
+    throw new ApiError(400, "Invalid LeetCode username");
+  }
 
   const userData = solvedResponse.data?.data?.matchedUser;
 
